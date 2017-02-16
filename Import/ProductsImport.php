@@ -329,137 +329,100 @@ class ProductsImport extends BaseImport
                             // Update features (= caracteristiques) values
                             // -------------------------------------------
 
-                            $caracvals = $this->t1db->query_list(
-                                "select * from caracval where produit=?",
-                                array($produit->id)
-                            );
-
-                            foreach ($caracvals as $caracval) {
-                                try {
-                                    if (intval($caracval->caracdisp) != 0) {
-                                        $feature_value = $this->feat_av_corresp->getT2($caracval->caracdisp);
-                                        $is_text = false;
-                                    } elseif ($caracval->valeur != '') {
-                                        $feature_value = $caracval->valeur;
-                                        $is_text = true;
-                                    } else {
-                                        continue;
-                                    }
-
-                                    $feature_value_event = new FeatureProductUpdateEvent(
-                                        $product_id,
-                                        $this->feat_corresp->getT2($caracval->caracteristique),
-                                        $feature_value,
-                                        $is_text
-                                    );
-
-                                    $this->dispatcher->dispatch(
-                                        TheliaEvents::PRODUCT_FEATURE_UPDATE_VALUE,
-                                        $feature_value_event
-                                    );
-                                } catch (\Exception $ex) {
-                                    Tlog::getInstance()
-                                        ->addError(
-                                            "Failed to update feature value with caracdisp ID=$caracval->caracdisp (value='$caracval->valeur') for product $product_id: ",
-                                            $ex->getMessage()
-                                        );
-
-                                    $errors++;
-                                }
-                            }
+//                            =
 
                             // Update Attributes (= declinaisons) options
                             // ------------------------------------------
-                            $rubdecs = $this->t1db->query_list(
-                                "
-                                                                select
-                                                                    declinaison
-                                                                from
-                                                                    rubdeclinaison rd, declinaison d
-                                                                where
-                                                                    rd.declinaison=d.id
-                                                                and
-                                                                    rd.rubrique=?
-                                                                 order by
-                                                                    d.classement",
-                                array($produit->rubrique)
-                            );
-
-                            foreach ($rubdecs as $rubdec) {
-                                $declidisps = $this->t1db->query_list(
-                                    "select id from declidisp where declinaison=?",
-                                    array($rubdec->declinaison)
-                                );
-
-                                foreach ($declidisps as $declidisp) {
-                                    $disabled = $this->t1db->query_list(
-                                        "select id from exdecprod where declidisp=? and produit=?",
-                                        array($declidisp->id, $produit->id)
-                                    );
-
-                                    if (count($disabled) > 0) {
-                                        continue;
-                                    }
-
-                                    $stock = $this->t1db->query_obj(
-                                        "select * from stock where declidisp=? and produit=?",
-                                        array($declidisp->id, $produit->id)
-                                    );
-
-                                    if ($stock == false) {
-                                        continue;
-                                    }
-
-                                    try {
-                                        $pse_create_event = new ProductSaleElementCreateEvent(
-                                            $event->getProduct(),
-                                            array($this->attr_av_corresp->getT2($stock->declidisp)),
-                                            $this->getT2Currency()->getId()
-                                        );
-
-                                        $this->dispatcher->dispatch(
-                                            TheliaEvents::PRODUCT_ADD_PRODUCT_SALE_ELEMENT,
-                                            $pse_create_event
-                                        );
-
-                                        $pse_update_event = new ProductSaleElementUpdateEvent(
-                                            $event->getProduct(),
-                                            $pse_create_event->getProductSaleElement()->getId()
-                                        );
-
-                                        $pse_update_event
-                                            ->setReference($destRef)
-                                            ->setPrice($produit->prix + $stock->surplus)
-                                            ->setCurrencyId($this->getT2Currency()->getId())
-                                            ->setWeight($produit->poids)
-                                            ->setQuantity($stock->valeur)
-                                            ->setSalePrice($produit->prix2 + $stock->surplus)
-                                            ->setOnsale($produit->promo ? true : false)
-                                            ->setIsnew($produit->nouveaute ? true : false)
-                                            ->setIsdefault(true)
-                                            ->setEanCode('')
-                                            ->setTaxRuleId($this->tax_corresp->getT2(1000 * $produit->tva))
-                                            ->setFromDefaultCurrency(0);
-
-                                        if ($is_text) {
-                                            $feature_value_event->setLocale($lang->getLocale());
-                                        }
-
-                                        $this->dispatcher->dispatch(
-                                            TheliaEvents::PRODUCT_UPDATE_PRODUCT_SALE_ELEMENT,
-                                            $pse_update_event
-                                        );
-                                    } catch (\Exception $ex) {
-                                        Tlog::getInstance()
-                                            ->addError(
-                                                "Failed to update product sale element value with declidisp ID=$stock->declidisp for product $product_id: ",
-                                                $ex->getMessage()
-                                            );
-
-                                        $errors++;
-                                    }
-                                }
-                            }
+//                            $rubdecs = $this->t1db->query_list(
+//                                "
+//                                                                select
+//                                                                    declinaison
+//                                                                from
+//                                                                    rubdeclinaison rd, declinaison d
+//                                                                where
+//                                                                    rd.declinaison=d.id
+//                                                                and
+//                                                                    rd.rubrique=?
+//                                                                 order by
+//                                                                    d.classement",
+//                                array($produit->rubrique)
+//                            );
+//
+//                            foreach ($rubdecs as $rubdec) {
+//                                $declidisps = $this->t1db->query_list(
+//                                    "select id from declidisp where declinaison=?",
+//                                    array($rubdec->declinaison)
+//                                );
+//
+//                                foreach ($declidisps as $declidisp) {
+//                                    $disabled = $this->t1db->query_list(
+//                                        "select id from exdecprod where declidisp=? and produit=?",
+//                                        array($declidisp->id, $produit->id)
+//                                    );
+//
+//                                    if (count($disabled) > 0) {
+//                                        continue;
+//                                    }
+//
+//                                    $stock = $this->t1db->query_obj(
+//                                        "select * from stock where declidisp=? and produit=?",
+//                                        array($declidisp->id, $produit->id)
+//                                    );
+//
+//                                    if ($stock == false) {
+//                                        continue;
+//                                    }
+//
+//                                    try {
+//                                        $pse_create_event = new ProductSaleElementCreateEvent(
+//                                            $event->getProduct(),
+//                                            array($this->attr_av_corresp->getT2($stock->declidisp)),
+//                                            $this->getT2Currency()->getId()
+//                                        );
+//
+//                                        $this->dispatcher->dispatch(
+//                                            TheliaEvents::PRODUCT_ADD_PRODUCT_SALE_ELEMENT,
+//                                            $pse_create_event
+//                                        );
+//
+//                                        $pse_update_event = new ProductSaleElementUpdateEvent(
+//                                            $event->getProduct(),
+//                                            $pse_create_event->getProductSaleElement()->getId()
+//                                        );
+//
+//                                        $pse_update_event
+//                                            ->setReference($destRef)
+//                                            ->setPrice($produit->prix + $stock->surplus)
+//                                            ->setCurrencyId($this->getT2Currency()->getId())
+//                                            ->setWeight($produit->poids)
+//                                            ->setQuantity($stock->valeur)
+//                                            ->setSalePrice($produit->prix2 + $stock->surplus)
+//                                            ->setOnsale($produit->promo ? true : false)
+//                                            ->setIsnew($produit->nouveaute ? true : false)
+//                                            ->setIsdefault(true)
+//                                            ->setEanCode('')
+//                                            ->setTaxRuleId($this->tax_corresp->getT2(1000 * $produit->tva))
+//                                            ->setFromDefaultCurrency(0);
+//
+//                                        if ($is_text) {
+//                                            $feature_value_event->setLocale($lang->getLocale());
+//                                        }
+//
+//                                        $this->dispatcher->dispatch(
+//                                            TheliaEvents::PRODUCT_UPDATE_PRODUCT_SALE_ELEMENT,
+//                                            $pse_update_event
+//                                        );
+//                                    } catch (\Exception $ex) {
+//                                        Tlog::getInstance()
+//                                            ->addError(
+//                                                "Failed to update product sale element value with declidisp ID=$stock->declidisp for product $product_id: ",
+//                                                $ex->getMessage()
+//                                            );
+//
+//                                        $errors++;
+//                                    }
+//                                }
+//                            }
 
                             // Import images and documents
                             // ---------------------------

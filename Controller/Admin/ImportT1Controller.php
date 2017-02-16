@@ -9,6 +9,7 @@ use ImportT1\Import\FeaturesImport;
 use ImportT1\Import\FoldersImport;
 use ImportT1\Import\OrdersImport;
 use ImportT1\Import\ProductsImport;
+use ImportT1\Import\UrlImport;
 use ImportT1\ImportT1;
 use ImportT1\Model\DatabaseInfo;
 use ImportT1\Model\Db;
@@ -396,8 +397,21 @@ class ImportT1Controller extends BaseAdminController
             new OrdersImport($this->getDispatcher(), $this->getDb()),
             $this->getTranslator()->trans("Orders importation"),
             'order',
-            'importT1.done',
+            'importT1.url',
             'importT1.order',
+            $start,
+            $total_errors
+        );
+    }
+
+    public function importUrlsAction($start = 0, $total_errors = 0)
+    {
+        return $this->genericImport(
+            new UrlImport($this->getDispatcher(), $this->getDb()),
+            $this->getTranslator()->trans("Urls importation"),
+            'url',
+            'importT1.done',
+            'importT1.url',
             $start,
             $total_errors
         );

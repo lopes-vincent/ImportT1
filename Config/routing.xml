@@ -68,6 +68,11 @@
         <default key="_controller">ImportT1\Controller\Admin\ImportT1Controller::importOrdersAction</default>
     </route>
 
+    <!-- Url importation -->
+    <route id="importT1.url" path="/admin/module/ImportT1/url/{start}/{total_errors}">
+        <default key="_controller">ImportT1\Controller\Admin\ImportT1Controller::importUrlsAction</default>
+    </route>
+
     <!-- Done ! -->
     <route id="importT1.done" path="/admin/module/ImportT1/done/{total_errors}">
         <default key="_controller">ImportT1\Controller\Admin\ImportT1Controller::importDoneAction</default>
